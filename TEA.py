@@ -19,10 +19,12 @@ def encrypt(plaintext, key):
     
     # Perform 32 rounds of encryption
     for i in range(ROUNDS):
-        sum = sum + DELTA
+        sum = (sum + DELTA) & 0xFFFFFFFF
+        L += ((R << 4) + K[0]) ^ (R + sum) ^ ((R >> 5) + K[1])
+        R += ((L << 4) + K[2]) ^ (L + sum) ^ ((L >> 5) + K[3])
 
     # Combine L and R to get the ciphertext, then return it
-    
+    ciphertext = (L << 32) | (R & 0xFFFFFFFF)
     return ciphertext
 
 # Decryption
@@ -32,7 +34,7 @@ def decrypt(ciphertext, key):
     # Split 64-bit ciphertext into L and R
 
     # Init sum
-    sum = DELTA << 5
+    sum = (DELTA << 5) & 0xFFFFFFFF
 
     # Perform 32 rounds of decryption
     for i in range(ROUNDS):
@@ -42,7 +44,7 @@ def decrypt(ciphertext, key):
 
     # Combine L and R to get plaintext
 
-    return plaintext
+    pass
 
 
 # Testing
@@ -50,4 +52,5 @@ my_key = 0xAF6BABCDEF00F000FEAFAFAFACCDEF01
 my_plaintext = 0x01CA45670CABCDEF
 
 my_ciphertext = encrypt(my_plaintext, my_key)
-decrypted = decrypt(my_ciphertext, my_key)
+print(my_ciphertext)
+# decrypted = decrypt(my_ciphertext, my_key)
