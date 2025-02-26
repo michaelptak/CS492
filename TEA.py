@@ -1,3 +1,19 @@
+'''
+Author: Michael Ptak
+CS492 Homework 2 - TEA Implementation
+
+Making it encode/decode a longer set of plaintext using CBC:
+Encryption function:
+    Take a random 64-bit IV (Initialization Vector)
+    XOR the first plaintext block with the IV
+    Encrypt the first block
+    Use the previous output block as the IV for the next block
+    Repeat for all blocks
+Decryption Function: 
+    Decrypt each ciphertext block
+    XOR the result with the previous ciphertext block, or the IV if it is the first block.
+
+'''
 # Constants
 DELTA = 0x9e3779b9
 ROUNDS = 32
@@ -20,8 +36,8 @@ def encrypt(plaintext, key):
     # Perform 32 rounds of encryption
     for i in range(ROUNDS):
         sum = sum + DELTA & 0xFFFFFFFF
-        L += ((R << 4) + K[0]) ^ (R+sum) ^ ((R >> 5) + K[1])
-        R += ((L << 4) + K[2]) ^ (L + sum) ^ ((L >> 5) + K[3])
+        L = (L + (((R << 4) + K[0]) ^ (R+sum) ^ ((R >> 5) + K[1]))) & 0xFFFFFFFF
+        R = (R + (((L << 4) + K[2]) ^ (L + sum) ^ ((L >> 5) + K[3]))) & 0xFFFFFFFF
 
     # Combine L and R to get the ciphertext, then return it
     ciphertext = (L << 32) | (R & 0xFFFFFFFF)
@@ -44,8 +60,8 @@ def decrypt(ciphertext, key):
 
     # Perform 32 rounds of decryption
     for i in range(ROUNDS):
-        R += ((L << 4) + K[2]) ^ (L + sum) ^ ((L >>5) + K[3])
-        L += ((R << 4) + K[0]) ^ (R + sum) ^ ((R>>5) + K[1])
+        R = (R - (((L << 4) + K[2]) ^ (L + sum) ^ ((L >>5) + K[3]))) & 0xFFFFFFFF
+        L = (L - (((R << 4) + K[0]) ^ (R + sum) ^ ((R>>5) + K[1]))) & 0xFFFFFFFF
         sum = sum - DELTA & 0xFFFFFFFF
 
     # Combine L and R to get plaintext
@@ -57,7 +73,9 @@ def decrypt(ciphertext, key):
 my_key = 0xAF6BABCDEF00F000FEAFAFAFACCDEF01 
 my_plaintext = 0x01CA45670CABCDEF
 
+print(f"Original CipherText: {my_plaintext}")
 my_ciphertext = encrypt(my_plaintext, my_key)
-print(my_ciphertext)
+print(f"CipherText (decimal): {my_ciphertext}")
+print(f"Ciphertext (hex): {hex(my_ciphertext)}")
 decrypted = decrypt(my_ciphertext, my_key)
-print(decrypted)
+print(f"Decrypted Plaintext: {decrypted}")
